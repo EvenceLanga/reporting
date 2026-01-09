@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  body {
+    background-color: #343a40;
+    color: white;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  h3 {
+    color: #EB1616;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .table thead th {
+    background-color: #EB1616 !important;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .table tbody td {
+    vertical-align: middle;
+    text-align: left;
+    background-color: #495057;
+    color: white;
+  }
+
+  .table tbody tr:hover {
+    background-color: #EB1616;
+    color: white;
+  }
+
+  .export-btn {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+
+  .export-btn:hover {
+    background-color: #e0a800;
+    color: white;
+  }
+</style>
+
+<div class="container mt-5">
+  <h3>↩️ Return Transactions – {{ current_month }} {{ current_year }}</h3>
+
+  <p class="text-center text-warning" style="font-size: 1.1rem;">
+    Showing all slips with return/refund items. Total Returns: <strong class="text-success">R {{ total_return_amount|floatformat:2 }}</strong>
+  </p>
+
+  <!-- Filter Form -->
+  <form method="get" class="row g-3 align-items-center mb-4">
+    <div class="col-auto">
+      <input type="date" name="from" value="{{ from_filter }}" class="form-control text-white bg-dark border border-light rounded">
+    </div>
+    <div class="col-auto">
+      <input type="date" name="to" value="{{ to_filter }}" class="form-control text-white bg-dark border border-light rounded">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Apply Filter</button>
+    </div>
+    <div class="col-auto">
+      <a href="{% url 'return_transactions' %}" class="btn btn-secondary">Clear</a>
+    </div>
+  </form>
+
+  <!-- Return Table -->
+  <div class="table-responsive">
+    <table id="returnTable" class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>Termnum</th>
+          <th>Logfile</th>
+          <th>Trandate</th>
+          <th>Trantime</th>
+          <th>Ref</th>
+          <th>Opref</th>
+          <th>Seqno</th>
+          <th>Userid</th>
+          <th>Trcod</th>
+          <th>Details</th>
+          <th>Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in returns %}
+        <tr>
+          <td>{{ row.termnum }}</td>
+          <td>{{ row.logfile }}</td>
+          <td>{{ row.trandate }}</td>
+          <td>{{ row.trantime }}</td>
+          <td>{{ row.ref }}</td>
+          <td>{{ row.opref }}</td>
+          <td>{{ row.seqno }}</td>
+          <td>{{ row.userid }}</td>
+          <td>{{ row.trcod }}</td>
+          <td>{{ row.details }}</td>
+          <td>{{ row.code }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="11" class="text-center text-warning">No return transactions found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="mt-4">
+    <nav>
+      <ul class="pagination justify-content-center">
+        {% if returns.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ returns.previous_page_number }}{% if from_filter %}&from={{ from_filter }}{% endif %}{% if to_filter %}&to={{ to_filter }}{% endif %}">Previous</a>
+          </li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">{{ returns.number }}</span></li>
+        {% if returns.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ returns.next_page_number }}{% if from_filter %}&from={{ from_filter }}{% endif %}{% if to_filter %}&to={{ to_filter }}{% endif %}">Next</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Optional DataTables support -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<script>
+  $(document).ready(function () {
+    $('#returnTable').DataTable();
+  });
+</script>
+
+{% endblock %}

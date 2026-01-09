@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  body {
+    background-color: #343a40;
+    color: white;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  h3 {
+    color: #EB1616;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .table thead th {
+    background-color: #EB1616 !important;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .table tbody td {
+    vertical-align: middle;
+    text-align: left;
+    background-color: #495057;
+    color: white;
+  }
+
+  .table tbody tr:hover {
+    background-color: #EB1616;
+    color: white;
+  }
+</style>
+
+<div class="container mt-5">
+  <h3>📦 Stock On Hand</h3>
+  <!-- Search Form -->
+  <form method="get" class="search-form mb-4">
+    <div class="input-group">
+      <input type="text" name="search"  placeholder="Search by code, description, or category" value="{{ search_query }}" class="form-control text-white bg-dark border border-light rounded">
+      <div class="input-group-append">
+        <button class="btn btn-danger" type="submit">Search</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Description</th>
+          <th>Std Sell</th>
+          <th>Open Stock</th>
+          <th>Qty</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in products %}
+        <tr>
+          <td>{{ item.code }}</td>
+          <td>{{ item.description }}</td>
+          <td>{{ item.stdsell }}</td>
+          <td>{{ item.openstock }}</td>
+          <td>{{ item.qty }}</td>
+          <td>{{ item.cat }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center">No products found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?search={{ search_query }}&page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?search={{ search_query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+      {% endif %}
+
+      <li class="page-item active">
+        <span class="page-link">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?search={{ search_query }}&page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?search={{ search_query }}&page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endblock %}

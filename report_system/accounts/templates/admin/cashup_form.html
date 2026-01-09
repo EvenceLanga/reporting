@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Fuel Cash-Up</h2>
+
+<!-- 🔀 Toggle Buttons -->
+<div style="margin-bottom: 20px;">
+  <button onclick="showForm()" class="btn btn-primary">Fill Cash-Up Form</button>
+  <button onclick="showRecords()" class="btn btn-secondary">View Cash-Up Records</button>
+</div>
+
+<!-- 📝 Form Section -->
+<div id="form-section">
+  <form method="post">
+    {% csrf_token %}
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+      {% for field in form %}
+        <div style="flex: 1 0 300px;">
+          <label>{{ field.label_tag }}</label><br>
+          {{ field }}
+          {% if field.errors %}
+            <div style="color: red;">{{ field.errors }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    <br>
+    <button type="submit" class="btn btn-success">Submit</button>
+  </form>
+</div>
+
+<!-- 📋 Records Section -->
+<div id="records-section" style="display: none;">
+  <h3>Recent Fuel Cash-Ups</h3>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+    <thead style="background: #eee;">
+      <tr>
+        <th>Date</th>
+        <th>Fuel Type</th>
+        <th>Opening (L)</th>
+        <th>Closing (L)</th>
+        <th>Litres Pumped</th>
+        <th>Amount Paid</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+        <tr>
+          <td>{{ record.date|date:"d M Y" }}</td>
+          <td>{{ record.fuel_type }}</td>
+          <td>{{ record.opening_litres }}</td>
+          <td>{{ record.closing_litres }}</td>
+          <td>{{ record.litres_pumped }}</td>
+          <td>R{{ record.amount_paid|floatformat:2 }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6">No fuel cash-up records found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 🧠 Toggle JavaScript -->
+<script>
+  function showForm() {
+    document.getElementById("form-section").style.display = "block";
+    document.getElementById("records-section").style.display = "none";
+  }
+
+  function showRecords() {
+    document.getElementById("form-section").style.display = "none";
+    document.getElementById("records-section").style.display = "block";
+  }
+
+  // Auto show form on initial load
+  showForm();
+</script>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid pt-4 px-4">
+  <div class="bg-secondary text-white rounded p-4">
+    <h4 class="mb-4">Apply for Sick Leave</h4>
+    <form method="POST" action="/leave/apply/">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="startDate" class="form-label">Start Date</label>
+        <input type="date" class="form-control" id="startDate" name="start_date" required>
+      </div>
+      <div class="mb-3">
+        <label for="endDate" class="form-label">End Date</label>
+        <input type="date" class="form-control" id="endDate" name="end_date" required>
+      </div>
+      <div class="mb-3">
+        <label for="reason" class="form-label">Reason</label>
+        <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Describe your condition" required></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="attachment" class="form-label">Attachment (optional)</label>
+        <input type="file" class="form-control" id="attachment" name="attachment" accept=".pdf,.jpg,.png">
+      </div>
+      <button type="submit" class="btn btn-danger">Submit Leave Request</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

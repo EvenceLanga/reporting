@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <h3 class="text-center text-warning">📈 Daily Sales Totals</h3>
+
+  <canvas id="salesChart" width="400" height="200"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const chartData = JSON.parse('{{ chart_data|escapejs }}');
+
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  const salesChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: chartData.labels,
+          datasets: [{
+              label: 'Total Sales',
+              data: chartData.totals,
+              backgroundColor: 'rgba(255, 99, 132, 0.6)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+          }]
+      },
+      options: {
+          responsive: true,
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  ticks: {
+                      callback: function(value) {
+                          return 'R ' + value.toFixed(2);
+                      }
+                  }
+              }
+          }
+      }
+  });
+</script>

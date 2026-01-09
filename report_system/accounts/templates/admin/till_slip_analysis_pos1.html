@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+<style>
+  body {
+    background-color: #343a40;
+    color: white;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  /* Fixed width for all input/select */
+  .fixed-width {
+    width: 200px; /* or your preferred width */
+    min-width: 200px;
+  }
+
+  /* For button, keep natural width */
+  form button.btn-primary {
+    width: auto;
+  }
+
+  h3 {
+    color: #EB1616;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  /* Form controls styling */
+  form input[type="date"],
+  form input[type="text"],
+  form select {
+    background-color: #495057;
+    color: white;
+    border: 1px solid #EB1616;
+    border-radius: 4px;
+    padding: 6px 8px;
+  }
+
+  form label {
+    color: white;
+    font-weight: 600;
+  }
+
+  form button.btn-primary {
+    background-color: #EB1616;
+    border-color: #EB1616;
+  }
+  form button.btn-primary:hover {
+    background-color: #b11212;
+    border-color: #b11212;
+  }
+
+  /* Buttons to toggle table/charts */
+  #showTableBtn,
+  #showChartsBtn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+ #showTableBtn,
+  #showChartsBtn {
+    background-color: #EB1616;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #showTableBtn:hover,
+  #showChartsBtn:hover {
+    background-color: #c31414; /* a slightly darker red for hover */
+  }
+
+  /* Table styling */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    background-color: #EB1616;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px 5px;
+  }
+
+  tbody td {
+    background-color: #495057;
+    color: white;
+    padding: 8px 5px;
+    vertical-align: middle;
+    text-align: left;
+  }
+
+  tbody tr:hover {
+    background-color: #EB1616;
+    color: white;
+  }
+
+  /* Pagination styling */
+  .pagination {
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  .pagination a {
+    color: #EB1616;
+    font-weight: bold;
+    margin: 0 6px;
+    text-decoration: none;
+  }
+  .pagination a:hover {
+    color: #b11212;
+  }
+
+  /* Responsive table wrapper */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  /* Responsive charts container */
+  #chartsSection > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+  }
+  #chartsSection > div > div {
+    flex: 1 1 300px;
+  }
+
+  /* Small screen adjustments */
+  @media (max-width: 575.98px) {
+    form .col-auto {
+      flex: 1 1 100%;
+    }
+    form button {
+      width: 100%;
+    }
+  }
+</style>
+
+<h3>⛽ Fuel Transactions Summary</h3>
+
+
+
+<form method="get" class="row g-2 mb-4 align-items-end">
+  <div class="col-auto">
+    <label for="start_date">Start Date:</label>
+    <input id="start_date" type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="fixed-width">
+  </div>
+  <div class="col-auto">
+    <label for="end_date">End Date:</label>
+    <input id="end_date" type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="fixed-width">
+  </div>
+  <div class="col-auto">
+    <label for="attendant">Attendant:</label>
+    <input id="attendant" type="text" name="attendant" value="{{ attendant_filter }}" placeholder="Attendant name filter" class="fixed-width">
+  </div>
+  <div class="col-auto">
+    <label for="fuel_type">Fuel Type:</label>
+    <select id="fuel_type" name="fuel_type" class="fixed-width">
+      <option value="">All Fuel Types</option>
+      {% for fuel, litres in litres_by_fuel.items %}
+        <option value="{{ fuel }}" {% if fuel == fuel_type_filter %}selected{% endif %}>{{ fuel }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary">Apply Filters</button>
+  </div>
+</form>
+
+
+<p><strong>Total Litres Sold:</strong> {{ total_litres|floatformat:3 }}</p>
+
+<p><strong>Total Litres - UNLEADED 95:</strong> {{ litres_by_fuel|lookup:"UNLEADED 95"|floatformat:3 }}</p>
+<p><strong>Total Litres - DIESEL 50PPM:</strong> {{ litres_by_fuel|lookup:"DIESEL 50PPM"|floatformat:3 }}</p>
+
+<p><strong>Total Amount Paid (R):</strong> R{{ total_amount_paid|floatformat:2 }}</p>
+<p><strong>Total VAT Collected (R):</strong> R{{ total_vat|floatformat:2 }}</p>
+
+<div class="mb-4">
+  <button id="showTableBtn">Show Table</button>
+  <button id="showChartsBtn">Show Charts</button>
+</div>
+
+<div id="tableSection" class="table-responsive">
+  {% if parsed_slips %}
+  <table>
+    <thead>
+      <tr>
+        <th>Attendant</th>
+        <th>Date & Time</th>
+        <th>Fuel Type</th>
+        <th>Litres</th>
+        <th>Paid (R)</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+      {% for slip in parsed_slips %}
+      <tr>
+        <td>{{ slip.attendant }}</td>
+        <td>{{ slip.trandate }} {{ slip.time }}</td> 
+        <td>{{ slip.fuel_type }}</td>
+        <td>{{ slip.litres|floatformat:3 }}</td>
+        <td>{{ slip.amount_paid|floatformat:2 }}</td>
+        
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if page_obj %}
+  <div class="d-flex justify-content-between mt-3">
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div>
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&attendant={{ attendant_filter }}">⬅ Prev</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&attendant={{ attendant_filter }}">Next ➡</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <p class="text-warning">⚠️ No fuel transactions found for these filters.</p>
+  {% endif %}
+</div>
+
+<div id="chartsSection" style="display:none;">
+  <h3>⛽ Fuel Sales Visualizations</h3>
+  <div>
+    <div>
+      <canvas id="litresTrendChart" height="300"></canvas>
+    </div>
+    <div>
+      <canvas id="attendantSalesChart" height="300"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const tableSection = document.getElementById('tableSection');
+  const chartsSection = document.getElementById('chartsSection');
+  const showTableBtn = document.getElementById('showTableBtn');
+  const showChartsBtn = document.getElementById('showChartsBtn');
+
+  showTableBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    tableSection.style.display = 'block';
+    chartsSection.style.display = 'none';
+  });
+
+  showChartsBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    tableSection.style.display = 'none';
+    chartsSection.style.display = 'block';
+  });
+
+  // Initialize charts
+  const ctxLitres = document.getElementById('litresTrendChart').getContext('2d');
+  const litresTrendChart = new Chart(ctxLitres, {
+    type: 'line',
+    data: {
+      labels: {{ dates|safe }},
+      datasets: [
+        {
+          label: 'UNLEADED 95',
+          data: {{ unleaded_data|safe }},
+          borderColor: 'orange',
+          backgroundColor: 'rgba(255,165,0,0.2)',
+          fill: false,
+          tension: 0.3
+        },
+        {
+          label: 'DIESEL 50PPM',
+          data: {{ diesel_data|safe }},
+          borderColor: 'green',
+          backgroundColor: 'rgba(0,128,0,0.2)',
+          fill: false,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Litres Sold Over Time'
+        }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+
+  const ctxAttendant = document.getElementById('attendantSalesChart').getContext('2d');
+  const attendantSalesChart = new Chart(ctxAttendant, {
+    type: 'bar',
+    data: {
+      labels: {{ attendant_sales_labels|safe }},
+      datasets: [{
+        label: 'Total Sales by Attendant',
+        data: {{ attendant_sales_counts|safe }},
+        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Number of Sales per Attendant'
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          precision: 0
+        }
+      }
+    }
+  });
+</script>
+
+{% endblock %}

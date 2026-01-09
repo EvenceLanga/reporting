@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  body {
+    background-color: #343a40;
+    color: white;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  h2 {
+    color: #EB1616;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  label {
+    font-weight: bold;
+  }
+  .form-control {
+    background-color: #495057;
+    color: white;
+    border: 1px solid #EB1616;
+  }
+  .form-control::placeholder {
+    color: #ccc;
+  }
+  .form-control:focus {
+    background-color: #343a40;
+    border-color: #EB1616;
+    color: white;
+    box-shadow: none;
+  }
+  .btn-danger {
+    background-color: #EB1616;
+    border-color: #EB1616;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  .btn-danger:hover {
+    background-color: #c31414;
+    border-color: #c31414;
+  }
+  .btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+    font-weight: bold;
+  }
+  .btn-warning:hover {
+    background-color: #e0a800;
+    color: white;
+  }
+  .table {
+    background-color: #495057;
+    color: white;
+  }
+  .table thead th {
+    background-color: #EB1616;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+  }
+  .table tbody td {
+    vertical-align: middle;
+  }
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #3a3f44;
+  }
+  .table-bordered {
+    border: 1px solid #EB1616;
+  }
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #EB1616;
+  }
+  .pagination .btn-outline-light {
+    border-color: #EB1616;
+    color: white;
+  }
+  .pagination .btn-outline-light:hover {
+    background-color: #EB1616;
+    color: white;
+    border-color: #EB1616;
+  }
+  ul.mb-0 {
+    padding-left: 1rem;
+  }
+  ul.mb-0 li {
+    margin-bottom: 4px;
+  }
+  .summary-box {
+    background-color: #212529;
+    border: 1px solid #6c757d;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  .summary-box h5 {
+    color: #28a745;
+    margin-bottom: 15px;
+  }
+  .summary-box li strong {
+    color: #ffc107;
+  }
+  .summary-box li span.text-warning {
+    color: #ffc107;
+  }
+</style>
+
+<div class="container mt-5">
+  <h2>🧾 Mamehlabe Till Slip Analysis</h2>
+
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+      <label for="start_date">Start Date:</label>
+      <input id="start_date" type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label for="end_date">End Date:</label>
+      <input id="end_date" type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label for="user">User ID:</label>
+      <input id="user" type="text" name="user" value="{{ user_filter }}" class="form-control" placeholder="User ID filter">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="submit" class="btn btn-danger w-100">Apply Filters</button>
+    </div>
+    <div class="col-auto">
+      <a href="{% url 'most_sold_items' %}" class="btn btn-warning">🧾 Most Sold Items</a>
+
+    </div>
+  </form>
+
+  {% if total_transactions %}
+    <div class="summary-box mb-4">
+      <h5>📊 Summary</h5>
+      <ul class="list-unstyled mb-0">
+        <li><strong>Total Transactions:</strong> {{ total_transactions }}</li>
+        <li><strong>Total Amount Paid:</strong> R{{ total_amount_paid|floatformat:2 }}</li>
+        <li><strong>Total VAT Collected:</strong> R{{ total_vat_amount|floatformat:2 }}</li>
+        <li><strong>Returns:</strong> R{{ total_returns|floatformat:2 }}</li>
+        <li><strong>Payouts:</strong> R{{ total_payouts|floatformat:2 }}</li>
+        <li><strong>Receipts:</strong> R{{ total_receipts|floatformat:2 }}</li>
+        <li><strong>Payments:</strong> R{{ total_payments|floatformat:2 }}</li>
+        <li><strong>Net Takings:</strong> <span class="text-warning">R{{ nett_takings|floatformat:2 }}</span></li>
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if page_obj %}
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered text-white">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Date & Time</th>
+            <th>Logfile</th>
+            <th>Items (Qty × Name — Amount + VAT)</th>
+            <th>Amount Paid (R)</th>
+            <th>VAT (R)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for slip in page_obj %}
+            <tr>
+              <td>{{ slip.userid }}</td>
+              <td>{{ slip.trandate }} {{ slip.time }}</td>
+              <td>{{ slip.logfile }}</td>
+              <td>
+                <ul class="mb-0">
+                  {% for item in slip.items %}
+                    <li>{{ item.quantity }} × {{ item.name }} — R{{ item.amount|floatformat:2 }} (VAT: R{{ item.vat|floatformat:2 }})</li>
+                  {% endfor %}
+                </ul>
+              </td>
+              <td>R{{ slip.amount_paid|floatformat:2 }}</td>
+              <td>R{{ slip.vat|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="d-flex justify-content-between align-items-center mt-3">
+      <div>
+        {% if page_obj.has_previous %}
+          <a class="btn btn-outline-light btn-sm" href="?page={{ page_obj.previous_page_number }}&{{ querystring }}">← Previous</a>
+        {% endif %}
+      </div>
+      <div>
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      </div>
+      <div>
+        {% if page_obj.has_next %}
+          <a class="btn btn-outline-light btn-sm" href="?page={{ page_obj.next_page_number }}&{{ querystring }}">Next →</a>
+        {% endif %}
+      </div>
+    </nav>
+  {% else %}
+    <p class="text-warning mt-4 text-center">⚠️ No till slips found for your criteria.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  body {
+    background-color: #f8f9fa;
+    color: #212529;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .search-box {
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+  }
+
+  .search-box input,
+  .search-box select {
+    padding: 8px 12px;
+    width: 250px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 14px;
+  }
+
+  .export-btn {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease;
+  }
+
+  .export-btn:hover {
+    background-color: #0056b3;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
+  }
+
+  thead {
+    background-color: #343a40;
+    color: white;
+  }
+
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 14px;
+  }
+
+  tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+
+  /* ✅ Modal Styles */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: auto;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal-content {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 1200px;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #343a40;
+    color: white;
+    padding: 12px 20px;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .close-btn {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+
+  .scroll-container {
+    padding: 20px;
+    overflow-x: auto;
+    overflow-y: auto;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    background-color: #f8f9fa;
+    flex-grow: 1;
+    white-space: pre;
+    min-width: 1000px;
+  }
+
+  .raw-text-display {
+    white-space: pre;
+    overflow-x: auto;
+    display: block;
+    color: #212529;
+  }
+
+  @media (max-width: 768px) {
+    .modal-content {
+      max-width: 100%;
+      max-height: 95vh;
+    }
+
+    .scroll-container {
+      font-size: 13px;
+      min-width: 700px;
+    }
+  }
+</style>
+
+<div class="container">
+  <h2>📊 Supabase Report Sections</h2>
+
+  <!-- 🔍 Search and Filter -->
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="🔍 Search reports..." value="{{ search_query }}">
+    <select id="sectionFilter">
+      <option value="">🔽 Filter by Section</option>
+      {% for name in distinct_sections %}
+        <option value="{{ name }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- ⬇ Export Button -->
+  <button class="export-btn" onclick="exportTableToCSV('report_sections.csv')">⬇️ Export CSV</button>
+
+  <!-- 📋 Table -->
+  <div class="table-container">
+    <table id="reportTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Batch No</th>
+          <th>Report Date</th>
+          <th>Section</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in sections %}
+        <tr>
+          <td>{{ row.index }}</td>
+          <td>{{ row.batch_number }}</td>
+          <td>{{ row.report_date }}</td>
+          <td>{{ row.section_name }}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="showRaw(`{{ row.raw_text|escapejs }}`)">View Full</button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center">No reports found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 🪟 Modal -->
+<div id="rawModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5>📄 Full Section Content</h5>
+      <button onclick="closeRaw()" class="btn btn-danger btn-sm close-btn">✖ Close</button>
+    </div>
+
+    <div class="scroll-container">
+      <pre id="rawModalContent" class="raw-text-display"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Scripts -->
+<script>
+  function exportTableToCSV(filename) {
+    const table = document.getElementById("reportTable");
+    let csv = [];
+    for (let row of table.rows) {
+      let rowData = [];
+      for (let cell of row.cells) {
+        rowData.push(cell.innerText.replace(/,/g, ""));
+      }
+      csv.push(rowData.join(","));
+    }
+
+    const csvContent = csv.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.setAttribute("hidden", "");
+    a.setAttribute("href", url);
+    a.setAttribute("download", filename);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function showRaw(text) {
+    const modal = document.getElementById("rawModal");
+    const content = document.getElementById("rawModalContent");
+    content.textContent = text;
+    modal.classList.add("show");
+  }
+
+  function closeRaw() {
+    document.getElementById("rawModal").classList.remove("show");
+  }
+
+  document.getElementById("searchInput").addEventListener("keyup", function (e) {
+    if (e.key === "Enter") {
+      const query = this.value;
+      window.location.href = `?search=${encodeURIComponent(query)}`;
+    }
+  });
+
+  document.getElementById("sectionFilter").addEventListener("change", function () {
+    const section = this.value;
+    window.location.href = `?search=${encodeURIComponent(section)}`;
+  });
+</script>
+
+{% endblock %}

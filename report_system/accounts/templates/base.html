@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BaalPerazim</title>
+
+
+</head>
+<body>
+
+  {% include 'includes/navbar.html' %}
+
+  <main class="container my-4">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  {% include 'includes/footer.html' %}
+
+</body>
+<script>
+  // Auto logout after inactivity (600 seconds = 10 minutes)
+  let logoutTimer = 600000; // 600000 ms = 10 min, 60000 ms = 1 min for testing
+  setTimeout(function() {
+      alert("You have been logged out due to inactivity.");
+      window.location.href = "{% url 'logout' %}";
+  }, logoutTimer);
+</script>
+
+</html>

@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  body {
+    background-color: #343a40;
+    color: white;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  h3 {
+    color: #EB1616;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .table thead th {
+    background-color: #EB1616 !important;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+  }
+  .table tbody td {
+    vertical-align: middle;
+    text-align: left;
+    background-color: #495057;
+    color: white;
+  }
+  .table tbody tr:hover {
+    background-color: #EB1616;
+    color: white;
+  }
+  .export-btn {
+  background-color: #ffc107;
+  color: #212529;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+.export-btn:hover {
+  background-color: #e0a800;
+  color: white;
+}
+
+</style>
+
+<div class="container mt-5">
+  <h3>📊 Mabokelele Monthly Sales – April 2025</h3>
+<p class="text-center" style="color: #ffc107; font-size: 1.1rem;">
+  {{ sales_message }}
+</p>
+
+  <!-- Sales Table -->
+  <div class="table-responsive">
+    <form method="get" action="" style="margin-bottom: 10px;">
+      <input type="text" name="cashier" placeholder="Filter by cashier" value="{{ cashier_filter }}">
+      <button type="submit">Apply Filter</button>
+      <a href="?{% if cashier_filter %}cashier={{ cashier_filter }}&{% endif %}export=excel" class="export-btn">⬇️ Export to Excel</a>
+
+   </form>
+
+    <table class="table table-hover table-bordered">
+
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Cashier</th>
+                <th>Cash Sales</th>
+                <th>Speedpoint</th>
+                <th>Chicks</th>
+                <th>Total Sales</th>
+                <th>Actual Sales</th>
+                <th>Variance</th>
+                <th>Head Office</th>
+                <th>Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in sales %}
+            <tr>
+                <td>{{ row.date }}</td>
+                <td>{{ row.cashier }}</td>
+                <td>{{ row.cash_sales }}</td>
+                <td>{{ row.speedpoint }}</td>
+                <td>{{ row.chicks }}</td>
+                <td>{{ row.total_sales }}</td>
+                <td>{{ row.actual_sales }}</td>
+                <td>{{ row.variance }}</td>
+                <td>{{ row.head_office }}</td>
+                <td>{{ row.comments }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+<div>
+    <span>Page {{ sales.number }} of {{ sales.paginator.num_pages }}</span>
+
+    {% if sales.has_previous %}
+        <a href="?page={{ sales.previous_page_number }}&cashier={{ cashier_filter }}">Previous</a>
+    {% endif %}
+
+    {% if sales.has_next %}
+        <a href="?page={{ sales.next_page_number }}&cashier={{ cashier_filter }}">Next</a>
+    {% endif %}
+</div>
+
+  </div>
+
+  <!-- Sales Chart -->
+  <div class="mt-5">
+    <canvas id="salesChart" height="100"></canvas>
+  </div>
+</div>
+
+<!-- Chart.js & DataTables -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+<!-- DataTables Init -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    $('#salesTable').DataTable({
+      pageLength: 10,
+      lengthMenu: [5, 10, 20, 50],
+      order: [[1, 'asc']]
+    });
+  });
+</script>
+
+<!-- Chart.js Logic -->
+<script>
+  const chartData = JSON.parse('{{ chart_data|escapejs }}');
+  const ctx = document.getElementById('salesChart').getContext('2d');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [
+        {
+          label: 'Total Sales (R)',
+          data: chartData.total_sales,
+          borderColor: '#EB1616',
+          backgroundColor: 'rgba(235,22,22,0.1)',
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Actual Sales (R)',
+          data: chartData.actual_sales,
+          borderColor: 'green',
+          backgroundColor: 'rgba(0,128,0,0.1)',
+          fill: true,
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: '📈 Total vs Actual Sales - Mabokelele April 2025',
+          font: {
+            size: 18
+          },
+          color: 'white'
+        },
+        legend: {
+          position: 'top',
+          labels: { color: 'white' }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: value => 'R' + value,
+            color: 'white'
+          },
+          grid: {
+            color: '#555'
+          }
+        },
+        x: {
+          ticks: { color: 'white' },
+          grid: { color: '#555' }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

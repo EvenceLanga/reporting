@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  body { background-color: #343a40; color: white; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+  h2 { color: #EB1616; text-align: center; margin-bottom: 30px; }
+  label { font-weight: bold; }
+  .form-control { background-color: #495057; color: white; border: 1px solid #EB1616; }
+  .form-control::placeholder { color: #ccc; }
+  .form-control:focus { background-color: #343a40; border-color: #EB1616; color: white; box-shadow: none; }
+  .btn-danger { background-color: #EB1616; border-color: #EB1616; font-weight: bold; }
+  .btn-danger:hover { background-color: #c31414; border-color: #c31414; }
+  .table { background-color: #495057; color: white; }
+  .table thead th { background-color: #EB1616; color: white; font-weight: bold; text-align: center; }
+  .table tbody td { vertical-align: middle; text-align: center; }
+  .table-striped tbody tr:nth-of-type(odd) { background-color: #3a3f44; }
+  .table-bordered { border: 1px solid #EB1616; }
+  .table-bordered th, .table-bordered td { border: 1px solid #EB1616; }
+</style>
+
+<div class="container mt-5">
+  <h2>🧾 Most Sold Items - POS{{ termnum }}</h2>
+
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+      <label for="start_date">Start Date:</label>
+      <input id="start_date" type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label for="end_date">End Date:</label>
+      <input id="end_date" type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label for="item">Item Name:</label>
+      <input id="item" type="text" name="item" value="{{ item_filter }}" class="form-control" placeholder="Item name filter">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="submit" class="btn btn-danger w-100">Apply Filters</button>
+    </div>
+  </form>
+
+  {% if page_obj %}
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered text-white">
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Quantity Sold</th>
+            <th>Total Amount (R)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item, totals in page_obj %}
+            <tr>
+              <td>{{ item }}</td>
+              <td>{{ totals.quantity|floatformat:2 }}</td>
+              <td>{{ totals.amount|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="d-flex justify-content-between align-items-center mt-3">
+      <div>
+        {% if page_obj.has_previous %}
+          <a class="btn btn-outline-light btn-sm" href="?page={{ page_obj.previous_page_number }}&{{ querystring }}">← Previous</a>
+        {% endif %}
+      </div>
+      <div>
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      </div>
+      <div>
+        {% if page_obj.has_next %}
+          <a class="btn btn-outline-light btn-sm" href="?page={{ page_obj.next_page_number }}&{{ querystring }}">Next →</a>
+        {% endif %}
+      </div>
+    </nav>
+  {% else %}
+    <p class="text-warning mt-4 text-center">⚠️ No items found for your criteria.</p>
+  {% endif %}
+</div>
+{% endblock %}

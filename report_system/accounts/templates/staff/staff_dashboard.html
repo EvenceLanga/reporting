@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="bg-secondary text-white rounded p-4">
+        <h6 class="mb-4">Best Employee of the Month</h6>
+        <div class="text-center">
+            <h4>Thabo M.</h4>
+            <p>Sales: 12,500 L</p>
+            <p>Total Revenue: R 93,750</p>
+            <p>Congratulations on outstanding performance!</p>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Summary -->
+<div class="container-fluid pt-2 px-4">
+    <div class="row g-4">
+        <div class="col-sm-4">
+            <div class="bg-secondary rounded text-center p-4">
+                <p class="mb-2">Fuel Sales (Today)</p>
+                <h6 class="mb-0">R 14,850</h6>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="bg-secondary rounded text-center p-4">
+                <p class="mb-2">Liters Dispensed (Today)</p>
+                <h6 class="mb-0">1,980 L</h6>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="bg-secondary rounded text-center p-4">
+                <p class="mb-2">Customer Count</p>
+                <h6 class="mb-0">187</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="container-fluid pt-4 px-4">
+    <div class="row g-4">
+         <div class="col-sm-12 col-xl-6">
+            <div class="bg-secondary text-center rounded p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h6 class="mb-0">Daily Fuel Revenue</h6>
+                    <a href="#">Detailed Report</a>
+                </div>
+                <canvas id="salse-revenue"></canvas>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-6">
+            <div class="bg-secondary text-center rounded p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h6 class="mb-0">Monthly Liters Sold</h6>
+                    <a href="#">Compare Months</a>
+                </div>
+                <canvas id="worldwide-sales"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pump Status Overview -->
+<div class="container-fluid pt-4 px-4">
+    <div class="bg-secondary text-white rounded p-4">
+        <h6 class="mb-4">Pump Status Overview</h6>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <h6>Pump 1</h6>
+                    <p>Status: <span class="text-success">Idle</span></p>
+                    <p>Last Sale: R 520.00</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <h6>Pump 2</h6>
+                    <p>Status: <span class="text-danger">Error</span></p>
+                    <p>Last Sale: R 0.00</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <h6>Pump 3</h6>
+                    <p>Status: <span class="text-warning">Dispensing</span></p>
+                    <p>Last Sale: R 220.00</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <h6>Pump 4</h6>
+                    <p>Status: <span class="text-success">Idle</span></p>
+                    <p>Last Sale: R 430.00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fuel Stock Levels -->
+<div class="container-fluid pt-4 px-4">
+    <div class="bg-secondary text-white rounded p-4">
+        <h6 class="mb-4">Fuel Stock Levels</h6>
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Unleaded Petrol</h6>
+                <p>Remaining: 3,200 L</p>
+                <p>Tank Capacity: 5,000 L</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Diesel</h6>
+                <p>Remaining: 2,800 L</p>
+                <p>Tank Capacity: 5,000 L</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performing Attendants -->
+<div class="container-fluid pt-4 px-4">
+    <div class="bg-secondary text-white rounded p-4">
+        <h6 class="mb-4">Top Performing Attendants (Today)</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered text-white mb-0">
+                <thead>
+                    <tr>
+                        <th>Attendant</th>
+                        <th>Sales (Liters)</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Thabo M.</td>
+                        <td>560 L</td>
+                        <td>R 4,200</td>
+                    </tr>
+                    <tr>
+                        <td>Lerato S.</td>
+                        <td>480 L</td>
+                        <td>R 3,700</td>
+                    </tr>
+                    <tr>
+                        <td>Sam K.</td>
+                        <td>390 L</td>
+                        <td>R 2,850</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

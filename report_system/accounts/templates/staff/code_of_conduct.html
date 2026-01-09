@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid pt-4 px-4">
+  <div class="bg-secondary text-white rounded p-4">
+    <h4 class="mb-4">Code of Conduct</h4>
+    <div class="accordion" id="conductAccordion">
+      <div class="accordion-item bg-secondary text-white border-0">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button collapsed bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+            Professional Behavior
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#conductAccordion">
+          <div class="accordion-body">
+            Staff are expected to maintain professionalism at all times, respect colleagues and customers, and adhere to station policies.
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item bg-secondary text-white border-0">
+        <h2 class="accordion-header" id="headingTwo">
+          <button class="accordion-button collapsed bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            Safety Guidelines
+          </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#conductAccordion">
+          <div class="accordion-body">
+            Always follow safety protocols, wear appropriate PPE, and report any hazards immediately to management.
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item bg-secondary text-white border-0">
+        <h2 class="accordion-header" id="headingThree">
+          <button class="accordion-button collapsed bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            Attendance & Punctuality
+          </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#conductAccordion">
+          <div class="accordion-body">
+            Staff must adhere to scheduled shifts, notify supervisors of absences in advance, and be punctual to maintain smooth operations.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

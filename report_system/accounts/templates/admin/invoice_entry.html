@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  body {
+    background-color: #343a40;
+    color: white;
+  }
+
+  h3 {
+    color: #EB1616;
+    font-weight: bold;
+  }
+
+  table {
+    background-color: #495057;
+    color: white;
+    border: 1px solid #dee2e6;
+  }
+
+  th, td {
+    vertical-align: middle !important;
+  }
+
+  thead th {
+    background-color: #EB1616 !important;
+    color: white;
+    font-weight: bold;
+    border: 1px solid #dee2e6;
+  }
+
+  tbody td {
+    border: 1px solid #dee2e6;
+  }
+
+  .form-control, select.form-control {
+    background-color: #212529;
+    color: white;
+    border: 1px solid #ced4da;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  .form-control:read-only {
+    background-color: #2d3238;
+  }
+
+  .btn {
+    font-weight: bold;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+</style>
+
+<div class="container mt-5">
+  <h3 class="text-center mb-4">FORECOURT INVOICES</h3>
+
+  <!-- 🔎 Date Filter -->
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label for="startDate" class="form-label">Start Date</label>
+      <input type="date" id="startDate" class="form-control">
+    </div>
+    <div class="col-md-4">
+      <label for="endDate" class="form-label">End Date</label>
+      <input type="date" id="endDate" class="form-control">
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button class="btn btn-outline-primary w-100" onclick="applyDateFilter()">Apply Filter</button>
+    </div>
+  </div>
+
+  <!-- Export & Add Buttons -->
+  <div class="d-flex gap-3 mb-3">
+    <button class="btn btn-success" onclick="addNewRow()">+ Add New Invoice</button>
+    <button class="btn btn-outline-success" onclick="exportToExcel()">Export to Excel</button>
+  </div>
+
+  <form id="invoiceForm" method="POST">
+    {% csrf_token %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover text-center" id="invoiceTable">
+        <thead>
+          <tr>
+            <th>Invoice Number</th>
+            <th>Date</th>
+            <th>Total Excl VAT</th>
+            <th>VAT (15%)</th>
+            <th>Status</th>
+            <th>Invoice PDF</th>
+            <th>Preview</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceBody"></tbody>
+      </table>
+    </div>
+
+    <div class="d-flex mb-4">
+      <button class="btn btn-success" onclick="addNewRow()">+ Add New Invoice</button>
+      <button type="submit" class="btn btn-primary">Submit New Invoices</button>
+      
+    </div>
+  </form>
+  <!-- 🔢 Pagination -->
+  <nav>
+    <ul class="pagination justify-content-center mt-3" id="pagination"></ul>
+  </nav>
+  <!-- 💰 Summary Totals -->
+  <div class="text-center mt-3">
+    <h6>
+      <span id="totalPaid">Total Paid: R0.00</span> |
+      <span id="totalUnpaid">Total Not Paid: R0.00</span>
+    </h6>
+  </div>
+
+  <!-- 📊 Invoice Chart -->
+  <div class="mt-5">
+    <h5 class="text-center">Monthly Invoice Status (Paid vs Not Paid)</h5>
+    <canvas id="invoiceChart" height="120"></canvas>
+  </div>
+
+  <!-- 🔔 Toast Notification -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastMsg" class="toast bg-success text-white" role="alert" data-bs-delay="3000">
+      <div class="toast-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ External Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  let allInvoices = [];
+  let currentPage = 1;
+  const pageSize = 10;
+  let invoiceChart;
+
+  function showToast(message, isSuccess = true) {
+    const toast = document.getElementById("toastMsg");
+    const toastBody = toast.querySelector(".toast-body");
+    toast.className = isSuccess ? "toast bg-success text-white" : "toast bg-danger text-white";
+    toastBody.textContent = message;
+    new bootstrap.Toast(toast).show();
+  }
+
+  function addNewRow(data = {}) {
+    const tbody = document.getElementById("invoiceBody");
+    const row = document.createElement("tr");
+    const isNew = !data.invoice_number;
+
+    row.innerHTML = `
+      <td><input type="text" name="invoice_number" class="form-control" value="${data.invoice_number || ''}" ${!isNew ? "readonly" : ""} required></td>
+      <td><input type="date" name="invoice_date" class="form-control" value="${data.invoice_date || ''}" ${!isNew ? "readonly" : ""} required></td>
+      <td><input type="number" step="0.01" name="total_excl_vat" class="form-control" value="${data.total_excl_vat || ''}" oninput="autoCalcVAT(this)" ${!isNew ? "readonly" : ""} required></td>
+      <td><input type="number" step="0.01" name="vat_amount" class="form-control" value="${data.vat_amount || ''}" readonly></td>
+      <td>
+        ${isNew
+          ? `<select name="status" class="form-control" required>
+              <option value="PAID">PAID</option>
+              <option value="NOT PAID">NOT PAID</option>
+            </select>`
+          : data.status}
+      </td>
+      <td>
+        ${isNew
+          ? `<input type="file" name="pdf_file" accept="application/pdf" class="form-control">`
+          : ""}
+      </td>
+      <td>
+        ${data.pdf_url
+          ? `<a href="${data.pdf_url}" target="_blank" class="btn btn-sm btn-secondary">Preview</a>`
+          : ""}
+      </td>
+      <td>
+        ${isNew
+          ? '<button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button>'
+          : `<button type="button" class="btn btn-danger btn-sm" onclick="deleteInvoice('${data.invoice_number}', this)">Delete</button>`}
+      </td>
+    `;
+
+    tbody.appendChild(row);
+
+    if (data.total_excl_vat && isNew) {
+      autoCalcVAT(row.querySelector("[name='total_excl_vat']"));
+    }
+  }
+  function updateTotalAmounts(invoices) {
+    let totalPaid = 0;
+    let totalUnpaid = 0;
+
+    invoices.forEach(inv => {
+      const amount = parseFloat(inv.total_excl_vat) || 0;
+      if (inv.status === "PAID") {
+        totalPaid += amount;
+      } else if (inv.status === "NOT PAID") {
+        totalUnpaid += amount;
+      }
+    });
+
+    document.getElementById("totalPaid").textContent = `Total Paid: R${totalPaid.toFixed(2)}`;
+    document.getElementById("totalUnpaid").textContent = `Total Not Paid: R${totalUnpaid.toFixed(2)}`;
+  }
+
+  function autoCalcVAT(input) {
+    const row = input.closest("tr");
+    const total = parseFloat(input.value) || 0;
+    row.querySelector("[name='vat_amount']").value = (total * 0.15).toFixed(2);
+  }
+
+  function removeRow(button) {
+    button.closest("tr").remove();
+  }
+
+  function deleteInvoice(invoiceNumber, button) {
+    if (!confirm(`Are you sure you want to delete invoice ${invoiceNumber}?`)) return;
+
+    fetch(`/invoices/delete/${invoiceNumber}/`, {
+      method: "DELETE",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          button.closest("tr").remove();
+          showToast("Invoice deleted successfully");
+          loadInvoices();
+        } else {
+          showToast(data.error || "Failed to delete invoice", false);
+        }
+      })
+      .catch(() => showToast("Error deleting invoice", false));
+  }
+
+  document.getElementById("invoiceForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const rows = Array.from(document.querySelectorAll("#invoiceBody tr"));
+    const newInvoices = [];
+
+    for (const row of rows) {
+      const invoiceNumberInput = row.querySelector("[name='invoice_number']");
+      if (!invoiceNumberInput || invoiceNumberInput.hasAttribute("readonly")) continue;
+
+      const invoice = {
+        invoice_number: invoiceNumberInput.value.trim(),
+        invoice_date: row.querySelector("[name='invoice_date']").value,
+        total_excl_vat: parseFloat(row.querySelector("[name='total_excl_vat']").value) || 0,
+        vat_amount: parseFloat(row.querySelector("[name='vat_amount']").value) || 0,
+        status: row.querySelector("[name='status']").value,
+        pdf_url: null
+      };
+
+      const pdfInput = row.querySelector("[name='pdf_file']");
+      if (pdfInput && pdfInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append("pdf", pdfInput.files[0]);
+        formData.append("invoice_number", invoice.invoice_number);
+
+        try {
+          const res = await fetch("{% url 'upload_invoice_pdf' %}", {
+            method: "POST",
+            body: formData
+          });
+          const result = await res.json();
+          if (result.success && result.url) {
+            invoice.pdf_url = result.url;
+          } else {
+            showToast(`Failed to upload PDF for ${invoice.invoice_number}`, false);
+            return;
+          }
+        } catch (err) {
+          showToast(`Upload error for ${invoice.invoice_number}`, false);
+          return;
+        }
+      }
+
+      newInvoices.push(invoice);
+    }
+
+    if (newInvoices.length === 0) {
+      showToast("No new invoices to save.", false);
+      return;
+    }
+
+    try {
+      const response = await fetch("{% url 'save_forecourt_invoices' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ invoices: newInvoices })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast("Invoices saved successfully!");
+        loadInvoices();
+      } else {
+        showToast(data.error || "Error saving invoices.", false);
+      }
+    } catch (err) {
+      showToast("Error saving invoices.", false);
+    }
+  });
+
+  function loadInvoices() {
+    fetch("{% url 'get_forecourt_invoices' %}")
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          showToast("Failed to load invoices.", false);
+          return;
+        }
+
+        allInvoices = data.invoices || [];
+        filteredInvoices = [...allInvoices];  // initialize filteredInvoices
+        currentPage = 1;
+        paginateInvoices(); // Only updates table
+        renderInvoiceChart(allInvoices); // Always show chart based on ALL data
+        updateTotalAmounts(allInvoices);
+
+      })
+      .catch(() => showToast("Error loading invoices.", false));
+  }
+
+  function paginateInvoices() {
+    const tbody = document.getElementById("invoiceBody");
+    tbody.innerHTML = "";
+
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const paginatedInvoices = filteredInvoices.slice(start, end);
+
+    paginatedInvoices.forEach(invoice => addNewRow(invoice));
+    renderPaginationControls();
+  }
+
+  function renderPaginationControls() {
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+
+    const totalPages = Math.ceil(allInvoices.length / pageSize);
+
+    for (let i = 1; i <= totalPages; i++) {
+      const li = document.createElement("li");
+      li.className = `page-item ${i === currentPage ? "active" : ""}`;
+      li.innerHTML = `<button class="page-link">${i}</button>`;
+      li.onclick = () => {
+        currentPage = i;
+        paginateInvoices();
+      };
+      pagination.appendChild(li);
+    }
+  }
+
+  function renderInvoiceChart(invoices) {
+    const monthlyData = {};
+
+    invoices.forEach(inv => {
+      const month = inv.invoice_date?.slice(0, 7);
+      if (!month) return;
+
+      if (!monthlyData[month]) {
+        monthlyData[month] = { PAID: 0, "NOT PAID": 0 };
+      }
+
+      monthlyData[month][inv.status] = (monthlyData[month][inv.status] || 0) + 1;
+    });
+
+    const labels = Object.keys(monthlyData).sort();
+    const paidData = labels.map(month => monthlyData[month].PAID || 0);
+    const unpaidData = labels.map(month => monthlyData[month]["NOT PAID"] || 0);
+
+    const ctx = document.getElementById("invoiceChart").getContext("2d");
+
+    if (invoiceChart) invoiceChart.destroy();
+
+    invoiceChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Paid",
+            data: paidData,
+            backgroundColor: "rgba(75, 192, 192, 0.6)",
+          },
+          {
+            label: "Not Paid",
+            data: unpaidData,
+            backgroundColor: "rgba(255, 99, 132, 0.6)",
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "Paid vs Unpaid Invoices (Monthly)"
+          }
+        }
+      }
+    });
+  }
+
+
+  function applyDateFilter() {
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+
+    if (!start && !end) {
+      filteredInvoices = [...allInvoices];
+      currentPage = 1;
+      paginateInvoices();
+      renderInvoiceChart(allInvoices);
+      updateTotalAmounts(filteredInvoices);
+      return;
+    }
+
+    filteredInvoices = allInvoices.filter(inv => {
+      const date = inv.invoice_date;
+      if (!date) return false;
+      if (start && date < start) return false;
+      if (end && date > end) return false;
+      return true;
+    });
+
+    currentPage = 1;
+    paginateInvoices();
+    renderInvoiceChart(filteredInvoices);
+  }
+
+  document.addEventListener("DOMContentLoaded", loadInvoices);
+
+  function exportToExcel() {
+    const data = allInvoices.map(inv => ({
+      "Invoice Number": inv.invoice_number,
+      "Date": inv.invoice_date,
+      "Total Excl VAT": inv.total_excl_vat,
+      "VAT (15%)": inv.vat_amount,
+      "Status": inv.status,
+      "PDF URL": inv.pdf_url || ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+    XLSX.writeFile(workbook, "forecourt_invoices.xlsx");
+  }
+</script>
+
+{% endblock %}

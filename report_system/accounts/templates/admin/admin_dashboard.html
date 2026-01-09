@@ -1,0 +1,618 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+:root {
+    --primary: #EB1616;
+    --primary-dark: #C41212;
+    --primary-light: #FF4D4D;
+}
+
+.dashboard-container {
+    background: linear-gradient(135deg, #1a1d23 0%, #2d3748 100%);
+    min-height: 100vh;
+    color: #e9ecef;
+    padding: 20px 0;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border: 1px solid #4a5568;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+
+.metric-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: var(--primary);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 10px 0;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.chart-container {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border: 1px solid #4a5568;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    height: 100%;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #4a5568;
+}
+
+.chart-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+}
+
+.filter-section {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid #4a5568;
+}
+
+.date-input {
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    color: white;
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+.date-input:focus {
+    background: #1a202c;
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(235, 22, 22, 0.25);
+}
+
+.btn-primary-custom {
+    background: var(--primary);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.staff-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.alert-low {
+    border-left: 4px solid #f56565;
+}
+
+.alert-medium {
+    border-left: 4px solid #ed8936;
+}
+
+.alert-good {
+    border-left: 4px solid #48bb78;
+}
+
+.progress-bar {
+    background: #4a5568;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 10px;
+}
+
+.performance-badge {
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+</style>
+
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="container">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-8">
+                <h1 class="text-white mb-2">📊 Dashboard Overview</h1>
+                <p class="text-muted mb-0">Real-time analytics for {{ start_date }} to {{ end_date }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="text-muted">Last updated: {% now "F j, Y, g:i a" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="container">
+        <div class="filter-section">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-white">From Date</label>
+                    <input type="date" name="from" class="form-control date-input" value="{{ from_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white">To Date</label>
+                    <input type="date" name="to" class="form-control date-input" value="{{ to_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        Apply Filter
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <a href="?" class="btn w-100" style="background: #4a5568; color: white; border: none;">
+                        Reset Filter
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top Row - Key Metrics -->
+    <div class="container">
+        <div class="row g-4">
+            <!-- Today's Revenue -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">💰</div>
+                    <div class="metric-label">Today's Revenue</div>
+                    <div class="metric-value">R {{ today_sale|floatformat:2 }}</div>
+                    <div class="metric-label">{{ today }}</div>
+                </div>
+            </div>
+
+            <!-- Week-to-Date -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">📅</div>
+                    <div class="metric-label">Week-to-Date</div>
+                    <div class="metric-value">R {{ week_sale|floatformat:2 }}</div>
+                    <div class="metric-label">{{ week_start }} to {{ week_end }}</div>
+                </div>
+            </div>
+
+            <!-- Month-to-Date -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-label">Month-to-Date</div>
+                    <div class="metric-value">R {{ month_sale|floatformat:2 }}</div>
+                    <div class="metric-label">{{ month_start }} to {{ month_end }}</div>
+                </div>
+            </div>
+
+            <!-- Total Revenue -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">🏦</div>
+                    <div class="metric-label">Total Revenue</div>
+                    <div class="metric-value">R {{ total_revenue|floatformat:2 }}</div>
+                    <div class="metric-label">{{ total_transactions }} transactions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row - Revenue Analytics -->
+    <div class="container">
+        <div class="row g-4">
+            <!-- Revenue Trend -->
+            <div class="col-xl-8">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Revenue Trend</h3>
+                    </div>
+                    <canvas id="revenueTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Revenue Split -->
+            <div class="col-xl-4">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Revenue Split</h3>
+                    </div>
+                    <canvas id="revenueSplitChart"></canvas>
+                    <div class="row mt-3 text-center">
+                        <div class="col-6">
+                            <div class="metric-value" style="font-size: 1.5rem;">R {{ fuel_total|floatformat:2 }}</div>
+                            <div class="metric-label">Fuel Sales ({{ fuel_percentage|floatformat:1 }}%)</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-value" style="font-size: 1.5rem;">R {{ nonfuel_total|floatformat:2 }}</div>
+                            <div class="metric-label">Shop Sales ({{ nonfuel_percentage|floatformat:1 }}%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Third Row - Fuel & Performance -->
+    <div class="container">
+        <div class="row g-4">
+            <!-- Fuel Sales Breakdown -->
+            <div class="col-xl-6">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Fuel Sales Breakdown</h3>
+                    </div>
+                    <canvas id="fuelSalesChart"></canvas>
+                    <div class="row mt-3 text-center">
+                        <div class="col-6">
+                            <div class="metric-value" style="font-size: 1.2rem;">R {{ diesel_total|floatformat:2 }}</div>
+                            <div class="metric-label">Diesel 50ppm</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-value" style="font-size: 1.2rem;">R {{ unleaded_total|floatformat:2 }}</div>
+                            <div class="metric-label">Unleaded 95</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Performance -->
+            <div class="col-xl-6">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Staff Performance</h3>
+                    </div>
+                    <div id="staffPerformance">
+                        {% for attendant, data in staff_performance.items %}
+                        <div class="metric-card mb-3 {% if forloop.first %}alert-good{% endif %}">
+                            <div class="d-flex align-items-center">
+                                <div class="staff-avatar me-3">
+                                    {{ attendant|slice:":2"|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <strong>{{ attendant }}</strong>
+                                    <div class="text-muted">
+                                        R {{ data.sales|floatformat:2 }} - {{ data.transactions }} transactions
+                                    </div>
+                                </div>
+                                {% if forloop.first %}
+                                <span class="performance-badge">Top Performer</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            No staff performance data available
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fourth Row - Operations -->
+    <div class="container">
+        <div class="row g-4">
+            <!-- Peak Hours -->
+            <div class="col-xl-6">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Peak Sales Hours</h3>
+                    </div>
+                    <canvas id="peakHoursChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Inventory Alerts -->
+            <div class="col-xl-6">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Inventory Alerts</h3>
+                        <span class="performance-badge">{{ inventory_alerts|length }} Items</span>
+                    </div>
+                    <div id="inventoryAlerts">
+                        {% for item in inventory_alerts %}
+                        <div class="metric-card mb-3 alert-{{ item.status }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ item.name }}</strong>
+                                    <div class="text-muted">Stock: {{ item.stock }} units</div>
+                                </div>
+                                <span class="text-{% if item.status == 'low' %}danger{% else %}warning{% endif %}">
+                                    {{ item.status|upper }}
+                                </span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ item.stock|divisibleby:item.threshold|floatformat:0 }}%"></div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            No inventory alerts
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fifth Row - Additional Metrics -->
+    <div class="container pb-5">
+        <div class="row g-4">
+            <!-- Returns & Refunds -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">🔄</div>
+                    <div class="metric-label">Total Returns</div>
+                    <div class="metric-value">R {{ total_returns|floatformat:2 }}</div>
+                    <div class="metric-label">Refunds & Returns</div>
+                </div>
+            </div>
+
+            <!-- Net Revenue -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">💸</div>
+                    <div class="metric-label">Net Revenue</div>
+                    <div class="metric-value">R {{ nett_revenue|floatformat:2 }}</div>
+                    <div class="metric-label">After returns</div>
+                </div>
+            </div>
+
+            <!-- Avg Transaction -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">📈</div>
+                    <div class="metric-label">Avg Transaction</div>
+                    <div class="metric-value">R {{ avg_transaction_value|floatformat:2 }}</div>
+                    <div class="metric-label">Per sale</div>
+                </div>
+            </div>
+
+            <!-- Transaction Count -->
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card">
+                    <div class="metric-icon">🧾</div>
+                    <div class="metric-label">Transactions</div>
+                    <div class="metric-value">{{ total_transactions }}</div>
+                    <div class="metric-label">Total sales</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Chart data from Django context
+const chartData = {
+    revenueTrend: {
+        labels: {{ revenue_trend_labels|safe }},
+        data: {{ revenue_trend_data|safe }}
+    },
+    revenueSplit: {
+        fuel: {{ fuel_total }},
+        nonfuel: {{ nonfuel_total }}
+    },
+    fuelSales: {
+        diesel: {{ diesel_total }},
+        unleaded: {{ unleaded_total }}
+    },
+    peakHours: {
+        labels: {{ hourly_labels|safe }},
+        data: {{ hourly_sales|safe }}
+    }
+};
+
+// Revenue Trend Chart
+const revenueCtx = document.getElementById('revenueTrendChart').getContext('2d');
+new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: chartData.revenueTrend.labels,
+        datasets: [{
+            label: 'Daily Revenue',
+            data: chartData.revenueTrend.data,
+            borderColor: '#EB1616',
+            backgroundColor: 'rgba(235, 22, 22, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    color: '#a0aec0',
+                    callback: function(value) {
+                        return 'R ' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    color: '#a0aec0'
+                }
+            }
+        }
+    }
+});
+
+// Revenue Split Chart
+const splitCtx = document.getElementById('revenueSplitChart').getContext('2d');
+new Chart(splitCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Fuel Sales', 'Shop Sales'],
+        datasets: [{
+            data: [chartData.revenueSplit.fuel, chartData.revenueSplit.nonfuel],
+            backgroundColor: ['#EB1616', '#4A5568'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        cutout: '70%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#a0aec0',
+                    padding: 20
+                }
+            }
+        }
+    }
+});
+
+// Fuel Sales Chart
+const fuelCtx = document.getElementById('fuelSalesChart').getContext('2d');
+new Chart(fuelCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Diesel 50ppm', 'Unleaded 95'],
+        datasets: [{
+            label: 'Sales (R)',
+            data: [chartData.fuelSales.diesel, chartData.fuelSales.unleaded],
+            backgroundColor: ['#ED8936', '#38B2AC'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    color: '#a0aec0',
+                    callback: function(value) {
+                        return 'R ' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: '#a0aec0'
+                }
+            }
+        }
+    }
+});
+
+// Peak Hours Chart
+const peakCtx = document.getElementById('peakHoursChart').getContext('2d');
+new Chart(peakCtx, {
+    type: 'bar',
+    data: {
+        labels: chartData.peakHours.labels,
+        datasets: [{
+            label: 'Sales (R)',
+            data: chartData.peakHours.data,
+            backgroundColor: '#EB1616',
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    color: '#a0aec0',
+                    callback: function(value) {
+                        return 'R ' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    color: '#a0aec0'
+                }
+            }
+        }
+    }
+});
+</script>
+
+{% endblock %}

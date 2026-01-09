@@ -1,0 +1,794 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  :root {
+    --primary: #EB1616;
+    --primary-dark: #C41212;
+    --primary-light: #FF4D4D;
+  }
+  
+  body { 
+    background-color: #1a1d23; 
+    color: #e9ecef;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+  }
+  
+  .container {
+    max-width: 100%;
+    padding: 20px;
+  }
+  
+  /* Header Styling */
+  .page-title {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+  }
+  
+  /* Rate Section Styling */
+  .rate-section {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 2rem;
+    border: 1px solid #4a5568;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  }
+  
+  .rate-section h4 {
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+  }
+  
+  .form-label {
+    color: #e2e8f0;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  .form-control {
+    background-color: #2d3748;
+    border: 2px solid #4a5568;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    background-color: #2d3748;
+    border-color: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(235, 22, 22, 0.25);
+  }
+  
+  /* Button Styling */
+  .btn-warning {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 25px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(235, 22, 22, 0.3);
+  }
+  
+  .btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(235, 22, 22, 0.4);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+    color: white;
+  }
+  
+  .btn-danger {
+    background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(229, 62, 62, 0.4);
+  }
+  
+  .btn-success {
+    background: linear-gradient(135deg, #38a169 0%, #68d391 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(56, 161, 105, 0.4);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(235, 22, 22, 0.4);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+  }
+  
+  /* Filter Section */
+  .d-flex.align-items-end {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 2rem;
+    border: 1px solid #4a5568;
+  }
+  
+  /* Table Container with Horizontal Scroll */
+  .table-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    margin-bottom: 2rem;
+    background: #2d3748;
+  }
+  
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #4a5568 #2d3748;
+  }
+  
+  .table-wrapper::-webkit-scrollbar {
+    height: 12px;
+  }
+  
+  .table-wrapper::-webkit-scrollbar-track {
+    background: #2d3748;
+    border-radius: 0 0 6px 6px;
+  }
+  
+  .table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 6px;
+    border: 2px solid #2d3748;
+  }
+  
+  .table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+  }
+  
+  /* Fixed first column styling */
+  .fixed-column {
+    position: sticky;
+    left: 0;
+    background: #2d3748;
+    z-index: 10;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  }
+  
+  .fixed-column-header {
+    position: sticky;
+    left: 0;
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    z-index: 20;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  }
+  
+  /* Table Styling */
+  .table {
+    margin-bottom: 0;
+    background: #2d3748;
+    color: #e9ecef;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 1800px;
+    width: 100%;
+  }
+  
+  .table th {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    color: var(--primary);
+    font-weight: 700;
+    border: none;
+    padding: 15px 12px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    position: relative;
+  }
+  
+  .table td {
+    background: #2d3748;
+    border: 1px solid #4a5568;
+    padding: 12px 10px;
+    vertical-align: middle;
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+  }
+  
+  .table tbody tr:hover td {
+    background: #374151;
+  }
+  
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #4a5568 !important;
+  }
+  
+  /* Input fields in table */
+  .table .form-control {
+    background: #1a202c;
+    border: 1px solid #4a5568;
+    color: #ffffff;
+    padding: 8px 10px;
+    font-size: 0.875rem;
+    min-width: 80px;
+    width: 100%;
+  }
+  
+  .table .form-control:focus {
+    background: #1a202c;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(235, 22, 22, 0.2);
+  }
+  
+  /* Calculated fields styling */
+  .table td[class*="litres_"],
+  .table td[class*="r_"],
+  .table td[class*="variance_"],
+  .table td[class*="actual_sales"],
+  .table td[class*="grand_total"],
+  .table td[class*="over_short"],
+  .table td[class*="pumped_theoretical"] {
+    background: #1a202c;
+    font-weight: 600;
+    color: var(--primary);
+    text-align: center;
+  }
+  
+  /* Positive/Negative value coloring */
+  .table .variance_pos.positive,
+  .table .over_short.positive {
+    color: #68d391;
+  }
+  
+  .table .variance_pos.negative,
+  .table .over_short.negative {
+    color: var(--primary-light);
+  }
+  
+  /* Toast Styling */
+  .toast {
+    background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  }
+  
+  .toast.bg-danger {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
+  }
+  
+  /* Scroll indicator */
+  .scroll-hint {
+    text-align: center;
+    color: var(--primary-light);
+    font-size: 0.875rem;
+    margin-bottom: 10px;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .container {
+      padding: 10px;
+    }
+    
+    .page-title {
+      font-size: 1.5rem;
+    }
+    
+    .table {
+      min-width: 2000px;
+    }
+    
+    .table th,
+    .table td {
+      padding: 8px 6px;
+      font-size: 0.75rem;
+    }
+    
+    .form-control {
+      padding: 8px 10px;
+      font-size: 0.75rem;
+    }
+    
+    .btn {
+      padding: 8px 15px;
+      font-size: 0.875rem;
+    }
+    
+    .scroll-hint {
+      font-size: 0.75rem;
+    }
+  }
+  
+  /* Loading animation for save buttons */
+  .save-btn.loading {
+    position: relative;
+    color: transparent;
+  }
+  
+  .save-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-right-color: transparent;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  /* Section headers in table */
+  thead tr:first-child th {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    color: var(--primary);
+    font-size: 1rem;
+    padding: 18px 12px;
+  }
+  
+  /* Zebra striping for better readability */
+  .table tbody tr:nth-child(even) td {
+    background: #2d3748;
+  }
+  
+  .table tbody tr:nth-child(odd) td {
+    background: #1a202c;
+  }
+  
+  .table tbody tr:hover td {
+    background: #374151 !important;
+  }
+  
+  /* Action column sticky on the right */
+  .action-column {
+    position: sticky;
+    right: 0;
+    background: #2d3748;
+    z-index: 10;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+  }
+  
+  .action-column-header {
+    position: sticky;
+    right: 0;
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    z-index: 20;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+  }
+  
+  /* Status indicators */
+  .status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+  
+  .status-active {
+    background-color: var(--primary);
+  }
+  
+  .status-saved {
+    background-color: #68d391;
+  }
+</style>
+
+<div class="container mt-4">
+  <h1 class="page-title">MAMEHLABE DAILY SALES REPORT – {{ current_month }} {{ current_year }}</h1>
+
+  <div class="rate-section">
+    <h4>📊 Current Fuel Rates</h4>
+    <form id="fuel-rate-form" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-4">
+        <label for="ulp_rate" class="form-label">⛽ Petrol (Unleaded 95) – R/L</label>
+        <input type="number" step="0.01" class="form-control" id="ulp_rate" name="ulp_rate"
+               value="{{ current_rates.rate_r22_12|floatformat:2 }}" placeholder="Enter rate per litre">
+      </div>
+      <div class="col-md-4">
+        <label for="d50_rate" class="form-label">⛽ Diesel (50ppm) – R/L</label>
+        <input type="number" step="0.01" class="form-control" id="d50_rate" name="d50_rate"
+               value="{{ current_rates.rate_r23_36|floatformat:2 }}" placeholder="Enter rate per litre">
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-warning w-100">
+          💾 Save Rates
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <form method="get" class="mb-4 d-flex align-items-end gap-3 flex-wrap">
+    <div class="flex-grow-1">
+      <label for="from" class="form-label">📅 From Date:</label>
+      <input type="date" id="from" name="from" class="form-control" value="{{ from_filter|default:'' }}">
+    </div>
+    <div class="flex-grow-1">
+      <label for="to" class="form-label">📅 To Date:</label>
+      <input type="date" id="to" name="to" class="form-control" value="{{ to_filter|default:'' }}">
+    </div>
+    <div>
+      <button type="submit" class="btn btn-danger mt-2">
+        🔍 Apply Filter
+      </button>
+    </div>
+    <div>
+      <a href="?from={{ from_filter }}&to={{ to_filter }}&export=excel" class="btn btn-success mt-2">
+        📊 Export to Excel
+      </a>
+    </div>
+  </form>
+
+  <div class="scroll-hint">
+    ← Scroll horizontally to view all columns →
+  </div>
+
+  <div class="table-container">
+    <div class="table-wrapper">
+      <table class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th class="fixed-column-header">📅 DATE</th>
+            <th colspan="2">⛽ UNLEADED 95</th>
+            <th colspan="2">⛽ DIESEL 50</th>
+            <th colspan="2">📈 DISPENSED</th>
+            <th colspan="2">💰 RATES</th>
+            <th colspan="3">🧮 TOTALS</th>
+            <th colspan="3">💳 SALES</th>
+            <th>📊 VARIANCE / SALES</th>
+            <th>💸 EXPENSES / ACCOUNT</th>
+            <th>🏦 GRAND TOTAL</th>
+            <th>⚖️ OVER / SHORT</th>
+            <th>📝 COMMENTS (EXPENSES)</th>
+            <th class="action-column-header">⚡ Action</th>
+          </tr>
+          <tr>
+            <th class="fixed-column-header"></th>
+            <th>OPENING</th>
+            <th>CLOSING</th>
+            <th>OPENING</th>
+            <th>CLOSING</th>
+            <th>ULP 95</th>
+            <th>D50</th>
+            <th>R22,12</th>
+            <th>R23,36</th>
+            <th>PUMPED THEORETICAL</th>
+            <th>ACTUAL POS</th>
+            <th>VARIANCE</th>
+            <th>CASH</th>
+            <th>CARDS</th>
+            <th>ACTUAL SALES</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th class="action-column-header"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in daily_sales %}
+          <tr data-date="{{ row.date }}">
+            <td class="fixed-column"><strong>{{ row.date }}</strong></td>
+            <td><input type="number" step="0.01" class="form-control ulp_open" value="{{ row.ulp_open }}"></td>
+            <td><input type="number" step="0.01" class="form-control ulp_close" value="{{ row.ulp_close }}"></td>
+            <td><input type="number" step="0.01" class="form-control d50_open" value="{{ row.d50_open }}"></td>
+            <td><input type="number" step="0.01" class="form-control d50_close" value="{{ row.d50_close }}"></td>
+
+            <!-- Hidden fields for stored rates -->
+            <input type="hidden" class="rate_ulp_used" value="{{ row.rate_ulp_used|default:current_rates.rate_r22_12|floatformat:2 }}">
+            <input type="hidden" class="rate_d50_used" value="{{ row.rate_d50_used|default:current_rates.rate_r23_36|floatformat:2 }}">
+
+            <td class="litres_ulp">{{ row.litres_ulp|default:0|floatformat:2 }}</td>
+            <td class="litres_d50">{{ row.litres_d50|default:0|floatformat:2 }}</td>
+
+            <td class="r_ulp">{{ row.r_ulp|default:0|floatformat:2 }}</td>
+            <td class="r_d50">{{ row.r_d50|default:0|floatformat:2 }}</td>
+
+            <td class="pumped_theoretical">{{ row.pumped_theoretical|default:0|floatformat:2 }}</td>
+            <td><input type="number" step="0.01" class="form-control actual_pos" value="{{ row.actual_pos }}"></td>
+            <td class="variance_pos">{{ row.variance_pos|default:0|floatformat:2 }}</td>
+
+            <td><input type="number" step="0.01" class="form-control cash" value="{{ row.cash }}"></td>
+            <td><input type="number" step="0.01" class="form-control cards" value="{{ row.cards }}"></td>
+            <td class="actual_sales">{{ row.actual_sales|default:0|floatformat:2 }}</td>
+
+            <td class="variance_sales">{{ row.variance_sales|default:0|floatformat:2 }}</td>
+            <td><input type="number" step="0.01" class="form-control expenses" value="{{ row.expenses }}"></td>
+            <td class="grand_total">{{ row.grand_total|default:0|floatformat:2 }}</td>
+            <td class="over_short">{{ row.over_short|default:0|floatformat:2 }}</td>
+
+            <td><input type="text" class="form-control comments" value="{{ row.comments }}" placeholder="Add comments..."></td>
+            <td class="action-column"><button class="btn btn-sm btn-primary save-btn">💾 Save</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+  <div id="toastMsg" class="toast bg-success text-white" role="alert" data-bs-delay="3000">
+    <div class="toast-body text-center">
+      <i class="fas fa-check-circle me-2"></i>
+      <span class="toast-message"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global variables for current rates (used only for new/unsaved rows)
+let ulp_price_global = parseFloat(document.getElementById("ulp_rate").value) || 0;
+let d50_price_global = parseFloat(document.getElementById("d50_rate").value) || 0;
+
+function showToast(message, isSuccess = true) {
+  const toast = document.getElementById("toastMsg");
+  const toastMessage = toast.querySelector(".toast-message");
+  
+  toast.classList.remove("bg-success", "bg-danger");
+  toast.classList.add(isSuccess ? "bg-success" : "bg-danger");
+  toastMessage.textContent = message;
+  
+  new bootstrap.Toast(toast).show();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  function recalcRow(row, forceUseGlobal = false) {
+    const ulp_open = parseFloat(row.querySelector(".ulp_open").value) || 0;
+    const ulp_close = parseFloat(row.querySelector(".ulp_close").value) || 0;
+    const d50_open = parseFloat(row.querySelector(".d50_open").value) || 0;
+    const d50_close = parseFloat(row.querySelector(".d50_close").value) || 0;
+    const actual_pos = parseFloat(row.querySelector(".actual_pos").value) || 0;
+    const cash = parseFloat(row.querySelector(".cash").value) || 0;
+    const cards = parseFloat(row.querySelector(".cards").value) || 0;
+    const expenses = parseFloat(row.querySelector(".expenses").value) || 0;
+    
+    // Determine which rates to use
+    let ulp_price, d50_price;
+    
+    if (forceUseGlobal) {
+      ulp_price = ulp_price_global;
+      d50_price = d50_price_global;
+    } else {
+      const stored_ulp = row.querySelector(".rate_ulp_used").value;
+      const stored_d50 = row.querySelector(".rate_d50_used").value;
+      ulp_price = stored_ulp ? parseFloat(stored_ulp) : ulp_price_global;
+      d50_price = stored_d50 ? parseFloat(stored_d50) : d50_price_global;
+    }
+
+    // AUTOMATIC CALCULATIONS
+    const litres_ulp = ulp_open - ulp_close;
+    const litres_d50 = d50_open - d50_close;
+    const r_ulp = litres_ulp * ulp_price;
+    const r_d50 = litres_d50 * d50_price;
+    const pumped = r_ulp + r_d50;
+    const variance_pos = pumped - actual_pos;
+    const actual_sales = cash + cards;
+    const variance_sales = actual_sales - actual_pos;
+    const grand_total = actual_sales + expenses;
+    const over_short = grand_total - actual_pos;
+
+    // Update display fields
+    row.querySelector(".litres_ulp").textContent = litres_ulp.toFixed(2);
+    row.querySelector(".litres_d50").textContent = litres_d50.toFixed(2);
+    row.querySelector(".r_ulp").textContent = r_ulp.toFixed(2);
+    row.querySelector(".r_d50").textContent = r_d50.toFixed(2);
+    row.querySelector(".pumped_theoretical").textContent = pumped.toFixed(2);
+    row.querySelector(".variance_pos").textContent = variance_pos.toFixed(2);
+    row.querySelector(".actual_sales").textContent = actual_sales.toFixed(2);
+    row.querySelector(".variance_sales").textContent = variance_sales.toFixed(2);
+    row.querySelector(".grand_total").textContent = grand_total.toFixed(2);
+    row.querySelector(".over_short").textContent = over_short.toFixed(2);
+
+    // Add color coding for variances
+    const variancePosElem = row.querySelector(".variance_pos");
+    const overShortElem = row.querySelector(".over_short");
+    
+    variancePosElem.classList.remove("positive", "negative");
+    overShortElem.classList.remove("positive", "negative");
+    
+    if (variance_pos > 0) variancePosElem.classList.add("positive");
+    if (variance_pos < 0) variancePosElem.classList.add("negative");
+    if (over_short > 0) overShortElem.classList.add("positive");
+    if (over_short < 0) overShortElem.classList.add("negative");
+  }
+
+  // Bind recalculation to input events
+  document.querySelectorAll("tbody tr").forEach(row => {
+    const inputFields = row.querySelectorAll('input[type="number"], input[type="text"]');
+    
+    inputFields.forEach(input => {
+      input.addEventListener("input", () => recalcRow(row));
+      input.addEventListener("blur", () => recalcRow(row));
+    });
+    
+    // Save button functionality
+    row.querySelector(".save-btn").addEventListener("click", function() {
+      const saveBtn = this;
+      const originalText = saveBtn.innerHTML;
+      
+      // Show loading state
+      saveBtn.innerHTML = 'Saving...';
+      saveBtn.classList.add('loading');
+      saveBtn.disabled = true;
+      
+      // Use global rates when saving
+      recalcRow(row, true);
+      
+      const payload = {
+        date: row.dataset.date,
+        ulp_open: parseFloat(row.querySelector(".ulp_open").value) || 0,
+        ulp_close: parseFloat(row.querySelector(".ulp_close").value) || 0,
+        d50_open: parseFloat(row.querySelector(".d50_open").value) || 0,
+        d50_close: parseFloat(row.querySelector(".d50_close").value) || 0,
+        actual_pos: parseFloat(row.querySelector(".actual_pos").value) || 0,
+        cash: parseFloat(row.querySelector(".cash").value) || 0,
+        cards: parseFloat(row.querySelector(".cards").value) || 0,
+        expenses: parseFloat(row.querySelector(".expenses").value) || 0,
+        comments: row.querySelector(".comments").value || "",
+        rate_ulp_used: ulp_price_global,
+        rate_d50_used: d50_price_global,
+        litres_ulp: parseFloat(row.querySelector(".litres_ulp").textContent) || 0,
+        litres_d50: parseFloat(row.querySelector(".litres_d50").textContent) || 0,
+        pumped_theoretical: parseFloat(row.querySelector(".pumped_theoretical").textContent) || 0,
+        variance_pos: parseFloat(row.querySelector(".variance_pos").textContent) || 0,
+        actual_sales: parseFloat(row.querySelector(".actual_sales").textContent) || 0,
+        variance_sales: parseFloat(row.querySelector(".variance_sales").textContent) || 0,
+        grand_total: parseFloat(row.querySelector(".grand_total").textContent) || 0,
+        over_short: parseFloat(row.querySelector(".over_short").textContent) || 0
+      };
+
+      fetch("{% url 'save_daily_sale' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast("✅ Row saved successfully!");
+          row.querySelector(".rate_ulp_used").value = ulp_price_global.toFixed(2);
+          row.querySelector(".rate_d50_used").value = d50_price_global.toFixed(2);
+        } else {
+          showToast("❌ Error: " + data.error, false);
+        }
+      })
+      .catch(err => {
+        console.error("Error saving:", err);
+        showToast("❌ Request failed. Please try again.", false);
+      })
+      .finally(() => {
+        // Restore button state
+        saveBtn.innerHTML = originalText;
+        saveBtn.classList.remove('loading');
+        saveBtn.disabled = false;
+      });
+    });
+
+    // Initial calculation
+    recalcRow(row);
+  });
+
+  // Fuel rates form
+  document.getElementById("fuel-rate-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const newULP = parseFloat(document.getElementById("ulp_rate").value) || 0;
+    const newD50 = parseFloat(document.getElementById("d50_rate").value) || 0;
+
+    fetch("{% url 'save_fuel_rates' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify({
+        rate_r22_12: newULP,
+        rate_r23_36: newD50
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        ulp_price_global = newULP;
+        d50_price_global = newD50;
+        showToast("✅ Fuel rates saved successfully!");
+        
+        document.querySelectorAll("tbody tr").forEach(row => {
+          const stored_ulp = row.querySelector(".rate_ulp_used").value;
+          const stored_d50 = row.querySelector(".rate_d50_used").value;
+          const hasStoredRates = stored_ulp && stored_d50 && parseFloat(stored_ulp) > 0 && parseFloat(stored_d50) > 0;
+          
+          if (!hasStoredRates) {
+            recalcRow(row, true);
+          }
+        });
+      } else {
+        showToast("❌ Failed to save rates: " + data.error, false);
+      }
+    })
+    .catch(err => {
+      console.error("Error saving rates:", err);
+      showToast("❌ Request failed. Please try again.", false);
+    });
+  });
+
+  // Real-time calculations with debounce
+  let typingTimer;
+  const doneTypingInterval = 500;
+
+  document.addEventListener('input', function(e) {
+    if (e.target.matches('.ulp_open, .ulp_close, .d50_open, .d50_close, .actual_pos, .cash, .cards, .expenses')) {
+      clearTimeout(typingTimer);
+      const row = e.target.closest('tr');
+      if (row) {
+        typingTimer = setTimeout(() => recalcRow(row), doneTypingInterval);
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

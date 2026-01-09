@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  body {
+    background-color: #343a40;
+    color: white;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  h3 {
+    color: #EB1616;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .table thead th {
+    background-color: #EB1616 !important;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+  }
+  .table tbody td {
+    vertical-align: middle;
+    text-align: left;
+    background-color: #495057;
+    color: white;
+  }
+  .table tbody tr:hover {
+    background-color: #EB1616;
+    color: white;
+  }
+  .export-btn {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  .export-btn:hover {
+    background-color: #e0a800;
+    color: white;
+  }
+</style>
+<style>
+    .sticky-filters {
+        position: sticky;
+        top: 0;
+        background-color: #000; /* match your theme */
+        z-index: 10;
+    }
+</style>
+<div class="container mt-5">
+  <h3>📊 Comprehensive POP Slip Sales</h3>
+
+  <p class="text-center" style="color: #ffc107; font-size: 1.1rem;">
+    {{ sales_message }}
+  </p>
+
+  <!-- Sales Table -->
+  <div class="table-responsive">
+  <form method="get" action="" class="row g-3 align-items-center mb-3">
+
+    <!-- Combined Search: User ID or Log File -->
+    <div class="col-auto">
+      <input type="text" name="search_term" value="{{ search_term }}"
+             placeholder="User ID or Log File"
+             class="form-control text-white bg-dark border border-light rounded">
+    </div>
+
+    <!-- Item Filter -->
+    <div class="col-auto">
+      <input type="text" name="item" placeholder="Filter by Item or Code"
+             value="{{ item_filter }}"
+             class="form-control text-white bg-dark border border-light rounded">
+    </div>
+
+    <!-- Transaction Date Range Filter -->
+    <div class="col-auto">
+      <input type="date" name="start_date" value="{{ start_date_filter }}"
+            class="form-control" placeholder="Start Date">
+    </div>
+
+    <div class="col-auto">
+      <input type="date" name="end_date" value="{{ end_date_filter }}"
+            class="form-control" placeholder="End Date">
+    </div>
+
+    <!-- Transaction Time Filter -->
+    <div class="col-auto">
+      <input type="text" name="trantime" placeholder="Filter by Trantime (e.g. 10:30)"
+             value="{{ trantime_filter }}"
+             class="form-control text-white bg-dark border border-light rounded">
+    </div>
+
+    <!-- Clear Filters -->
+    <div class="col-auto">
+      <a href="{% url 'mamehlabe_store' %}" class="btn btn-secondary">Clear Filters</a>
+    </div>
+
+    <!-- Apply Filters -->
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Apply Filters</button>
+    </div>
+
+    <!-- Export to Excel -->
+    <div class="col-auto">
+      <a href="?{% if search_term %}search_term={{ search_term|urlencode }}&{% endif %}
+                {% if item_filter %}item={{ item_filter|urlencode }}&{% endif %}
+                {% if trandate_filter %}trandate={{ trandate_filter|urlencode }}&{% endif %}
+                {% if trantime_filter %}trantime={{ trantime_filter|urlencode }}&{% endif %}
+                export=excel"
+         class="btn btn-outline-success">
+        ⬇️ Export to Excel
+      </a>
+    </div>
+
+  </form>
+
+    <table id="salesTable" class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>Termnum</th>
+          <th>Logfile</th>
+          <th>Trandate</th>
+          <th>Trantime</th>
+          <th>Ref</th>
+          <th>Opref</th>
+          <th>Seqno</th>
+          <th>Userid</th>
+          <th>Trcod</th>
+          <th>Details</th>
+          <th>Code</th>
+          <th>Flag1</th>
+          <th>Flag2</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in sales %}
+        <tr>
+          <td>{{ row.termnum }}</td>
+          <td>{{ row.logfile }}</td>
+          <td>{{ row.trandate }}</td>
+          <td>{{ row.trantime }}</td>
+          <td>{{ row.ref }}</td>
+          <td>{{ row.opref }}</td>
+          <td>{{ row.seqno }}</td>
+          <td>{{ row.userid }}</td>
+          <td>{{ row.trcod }}</td>
+          <td>{{ row.details }}</td>
+          <td>{{ row.code }}</td>
+          <td>{{ row.flag1 }}</td>
+          <td>{{ row.flag2 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div>
+      <span>Page {{ sales.number }} of {{ sales.paginator.num_pages }}</span>
+
+      {% if sales.has_previous %}
+        <a href="?page={{ sales.previous_page_number }}&userid={{ userid_filter }}&item={{ item_filter }}&trandate={{ trandate_filter }}&trantime={{ trantime_filter }}">Previous</a>
+      {% endif %}
+      {% if sales.has_next %}
+        <a href="?page={{ sales.next_page_number }}&userid={{ userid_filter }}&item={{ item_filter }}&trandate={{ trandate_filter }}&trantime={{ trantime_filter }}">Next</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- jQuery (must come first) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Chart.js & DataTables -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+<!-- DataTables Init -->
+<script>
+  $(document).ready(function() {
+    $('#salesTable').DataTable();
+  });
+</script>
+
+{% endblock %}
