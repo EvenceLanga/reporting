@@ -4,8 +4,11 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# Load .env file (absolute path as given)
-load_dotenv(dotenv_path=r"C:\Users\EvenceMohauLanga\OneDrive - Net Nine Nine\Documents\Reporting System\venv\.env")
+from pathlib import Path
+
+# Load .env from project root
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
